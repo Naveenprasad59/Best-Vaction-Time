@@ -56,6 +56,7 @@ const groupHolidaysSequentially = (holidays) => {
     let numberOfDaysContiuos = 1;
 
     let nextDay = dayjs(holiday).add(1, "day").format("YYYY-MM-DD");
+    // TODO: can optimize this further since holidays is a sorted array can check nextDay at nextIndex
     while (holidaysSet.has(nextDay)) {
       numberOfDaysContiuos++;
       nextDay = dayjs(nextDay).add(1, "day").format("YYYY-MM-DD");
@@ -85,31 +86,33 @@ const bridgeHolidaysWithLeaves = (holidays, numOfDaysToCheck) => {
     const holiday = holidays[holidayIndex];
     const updatedholidayObj = {
       date: holiday.date,
+      endDate: dayjs(holiday.date).add(holiday.numberOfDaysContiuos - 1, 'day').format('YYYY-MM-DD'),
       numberOfDaysContiuos: holiday.numberOfDaysContiuos,
     };
 
-    let leaveTaken = 1;
+    let leaveRemaining = numOfDaysToCheck;
 
-    while (leaveTaken <= numOfDaysToCheck) {
-      const dateWithLeavesAppliedHere = dayjs(holiday.date).add(
-        holiday.numberOfDaysContiuos + leaveTaken
+    while (true) {
+      const nextDay = dayjs(updatedholidayObj.endDate).add(1,'day');
+
+      const isNextDayHoliday = holidays.findIndex((h) =>
+        dayjs(h.date).isSame(nextDay)
       );
 
-      const foundIndex = holidays.findIndex((h) =>
-        dayjs(h.date).isSame(dateWithLeavesAppliedHere)
-      );
-
-      if (foundIndex > -1) {
-        const tobeBridgedDate = holidays[foundIndex];
+      if(isNextDayHoliday > -1) {
+        const tobeBridgedDate = holidays[isNextDayHoliday];
         updatedholidayObj.numberOfDaysContiuos +=
           tobeBridgedDate.numberOfDaysContiuos;
+        updatedholidayObj.endDate = nextDay.add(tobeBridgedDate.numberOfDaysContiuos - 1, 'day').format('YYYY-MM-DD');
       } else {
-        leaveTaken += 1;
+        if(leaveRemaining === 0) break;
+        leaveRemaining -= 1;
+        updatedholidayObj.endDate = nextDay.format('YYYY-MM-DD');
+        updatedholidayObj.numberOfDaysContiuos += 1;
       }
     }
 
-    const finalTotalLeave =
-      updatedholidayObj.numberOfDaysContiuos + numOfDaysToCheck;
+    const finalTotalLeave = updatedholidayObj.numberOfDaysContiuos;
 
     if (maxLeaveData.vacationCountWithLeave < finalTotalLeave) {
       maxLeaveData = {
