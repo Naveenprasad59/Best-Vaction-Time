@@ -1,4 +1,3 @@
-import fetch from "node-fetch";
 import dayjs from "dayjs";
 import 'dotenv/config'
 
@@ -7,9 +6,15 @@ import {
   getAllWeekendsInaQuarter,
 } from "./dateUtils.js";
 
+interface HolidayAPI {
+    name: string;
+    id: number;
+date: string;
+}
+
 const fetchHolidays = async () => {
   try {
-    let holidays = await fetch(
+    const responseData = await fetch(
       "https://klenty.keka.com/k/dashboard/api/dashboard/holidays",
       {
         headers: {
@@ -37,7 +42,7 @@ const fetchHolidays = async () => {
       }
     );
 
-    holidays = await holidays.json();
+    const holidays: {data: HolidayAPI[]} = await responseData.json();
     return holidays.data;
   } catch (err) {
     console.log(err);
