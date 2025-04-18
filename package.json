@@ -13,5 +13,8 @@
   "dependencies": {
     "dayjs": "^1.11.13",
     "node-fetch": "2.6.1"
+  },
+  "devDependencies": {
+    "dotenv": "^16.5.0"
   }
 }

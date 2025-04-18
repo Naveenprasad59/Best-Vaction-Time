@@ -1,5 +1,6 @@
 import fetch from "node-fetch";
 import dayjs from "dayjs";
+import 'dotenv/config'
 
 import {
   checkIsDateInCurrentQuarter,
@@ -14,8 +15,7 @@ const fetchHolidays = async () => {
         headers: {
           accept: "application/json, text/plain, */*",
           "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
-          authorization:
-            "Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6IjFBRjQzNjk5RUE0NDlDNkNCRUU3NDZFMjhDODM5NUIyMEE0MUNFMTgiLCJ4NXQiOiJHdlEybWVwRW5HeS01MGJpaklPVnNncEJ6aGciLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FwcC5rZWthLmNvbSIsIm5iZiI6MTczNTEyODg1NCwiaWF0IjoxNzM1MTI4ODU0LCJleHAiOjE3MzUyMTUyNTQsImF1ZCI6WyJrZWthaHIuYXBpIiwiaGlyby5hcGkiLCJodHRwczovL2FwcC5rZWthLmNvbS9yZXNvdXJjZXMiXSwic2NvcGUiOlsib3BlbmlkIiwia2VrYWhyLmFwaSIsImhpcm8uYXBpIiwib2ZmbGluZV9hY2Nlc3MiXSwiYW1yIjpbImV4dGVybmFsIl0sImNsaWVudF9pZCI6Ijk4N2NjOTcxLWZjMjItNDQ1NC05OWY5LTE2YzA3OGZhN2ZmNiIsInN1YiI6IjU0NTJlZjZjLTJkYjgtNGZlZi05OTFkLTJkZWI3NjdjYTQ5NSIsImF1dGhfdGltZSI6MTcyMTg4NzQxNCwiaWRwIjoiR29vZ2xlIiwidGVuYW50X2lkIjoiYjQ1NWY3MDgtYjdkMC00MmNlLWIzZjctNWMzYTQyYjFlYmIxIiwidGVuYW50aWQiOiJiNDU1ZjcwOC1iN2QwLTQyY2UtYjNmNy01YzNhNDJiMWViYjEiLCJzdWJkb21haW4iOiJrbGVudHkua2VrYS5jb20iLCJ1c2VyX2lkIjoiNzM2MTFmNmYtODMwOC00MDE5LThhMmUtMTVmZDczZDhlOGU2IiwidXNlcl9pZGVudGlmaWVyIjoiNzM2MTFmNmYtODMwOC00MDE5LThhMmUtMTVmZDczZDhlOGU2IiwidXNlcm5hbWUiOiJuYXZlZW5wcmFzYWRAa2xlbnR5LmNvbSIsImVtYWlsIjoibmF2ZWVucHJhc2FkQGtsZW50eS5jb20iLCJhdXRoZW50aWNhdGlvbl90eXBlIjoiMyIsInNpZCI6IjIxODI4NEIyOTM3NTE2QkYzOUY0NDI0MzlEMTlBODM3IiwianRpIjoiMDRBMEEwQ0VDRUZDM0MxMTY1N0FFQjA0RjU4QjY0NjAifQ.ZiZR2eAtiB1sK2BQEg5IDKT60Yy_BxBhTFnxCAgL5qUnGkcaFsyL1TqFlvyNSY-enicD4ENa7jDja9pwMyniPUPVAfNyho5YIdt2irhIkk3ZtEiLTcNHf6TQiQWpF4GyQVLCy6yhG4uDBsKEsmYp3A4TuMsTKRu8_gGbsuViCV8GKMv-W2kI7rCIVNGKG0W-6qf4aWdd1uqCJFPctVtizQS9OldwjCKly2cWmQffkXvUFGSppQMNcUEdvmEHVVQAnpN3Rp4-SelrtZDHAczWtCrZpYddJktrQFmNg7utlAMWvASDXOH7gM8q6kYa-jXD9ZWjTAOavaKdpLluwK5XUQ",
+          authorization: process.env.KEKA_TOKEN,
           "cache-control": "no-cache",
           "content-type": "application/json; charset=utf-8",
           pragma: "no-cache",

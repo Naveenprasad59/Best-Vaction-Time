@@ -14,19 +14,19 @@ export const checkIsDateInCurrentQuarter = (date, quarter, year) => {
 export const getAllWeekendsInaQuarter = (quarter = 4, year = 2024) => {
   let startDate, endDate;
   switch (quarter) {
-    case 1:
+    case 0:
       startDate = dayjs(`${year}-01-01`);
       endDate = dayjs(`${year}-03-31`);
       break;
-    case 2:
+    case 1:
       startDate = dayjs(`${year}-04-01`);
       endDate = dayjs(`${year}-06-30`);
       break;
-    case 3:
+    case 2:
       startDate = dayjs(`${year}-07-01`);
       endDate = dayjs(`${year}-09-30`);
       break;
-    case 4:
+    case 3:
       startDate = dayjs(`${year}-10-01`);
       endDate = dayjs(`${year}-12-31`);
       break;
