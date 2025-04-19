@@ -6,16 +6,23 @@ import {
   checkIsDateInCurrentQuarter,
   getAllWeekendsInaQuarter,
 } from "./dateUtils.js";
+import { askQuestions } from "./utils.js";
+
+interface HolidayAPI {
+  name: string;
+  id: number;
+  date: string;
+}
 
 const fetchHolidays = async () => {
   try {
-    let holidays = await fetch(
+    const response = await fetch(
       "https://klenty.keka.com/k/dashboard/api/dashboard/holidays",
       {
         headers: {
           accept: "application/json, text/plain, */*",
           "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
-          authorization: process.env.KEKA_TOKEN,
+          authorization: process.env.KEKA_TOKEN!,
           "cache-control": "no-cache",
           "content-type": "application/json; charset=utf-8",
           pragma: "no-cache",
@@ -37,15 +44,15 @@ const fetchHolidays = async () => {
       }
     );
 
-    holidays = await holidays.json();
-    return holidays.data;
+    const holidaysResponse = await response.json() as {data: HolidayAPI[]};
+    return holidaysResponse.data;
   } catch (err) {
     console.log(err);
     return Promise.reject(err);
   }
 };
 
-const groupHolidaysSequentially = (holidays) => {
+const groupHolidaysSequentially = (holidays: string[]) => {
   const updatedHolidays = [];
   const holidaysSet = new Set([...holidays]);
 
@@ -66,6 +73,7 @@ const groupHolidaysSequentially = (holidays) => {
       date: holiday,
       numberOfDaysContiuos,
     };
+
     updatedHolidays.push(obj);
     holidayIndex += numberOfDaysContiuos;
   }
@@ -73,7 +81,7 @@ const groupHolidaysSequentially = (holidays) => {
   return updatedHolidays;
 };
 
-const bridgeHolidaysWithLeaves = (holidays, numOfDaysToCheck) => {
+const bridgeHolidaysWithLeaves = (holidays: {date: string; numberOfDaysContiuos: number}[], numOfDaysToCheck: number) => {
   const bridgedHolidays = [];
   let holidayIndex = 0;
 
@@ -134,22 +142,18 @@ const bridgeHolidaysWithLeaves = (holidays, numOfDaysToCheck) => {
 const main = async () => {
   try {
     console.time('Execution Time');
-    const numOfDaysToCheck = 3;
-    const yearToCheck = 2025;
-    const quarterToCheck = 1;
+    const [yearToCheck, quarterToCheck, numOfDaysToCheck] =  await askQuestions();
     let holidays = await fetchHolidays();
-    holidays = holidays
-      .filter((holiday) => checkIsDateInCurrentQuarter(holiday.date, quarterToCheck, yearToCheck))
+    const holidayDates = holidays
+      .filter((holiday) => checkIsDateInCurrentQuarter(holiday.date, Number(quarterToCheck), yearToCheck))
       .map((data) => data.date);
-    const weekends = getAllWeekendsInaQuarter(quarterToCheck, yearToCheck);
-    const holidayDates = [...holidays];
-    holidays = groupHolidaysSequentially(
-      holidays.concat(weekends).sort((a, b) => (dayjs(a).isBefore(b) ? -1 : 1))
+    const weekends = getAllWeekendsInaQuarter(Number(quarterToCheck), yearToCheck);
+    const groupedLeaves = groupHolidaysSequentially(
+      holidayDates.concat(weekends).sort((a, b) => (dayjs(a).isBefore(b) ? -1 : 1))
     );
     const { bridgedHolidays, maxLeaveData } = bridgeHolidaysWithLeaves(
-      holidays,
-      numOfDaysToCheck,
-      holidayDates
+      groupedLeaves,
+      numOfDaysToCheck
     );
     console.timeEnd('Execution Time');
     console.log(bridgedHolidays);

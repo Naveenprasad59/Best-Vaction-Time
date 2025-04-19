@@ -1,10 +1,10 @@
 import dayjs from "dayjs";
 
-const getQuarter = (date) => {
+const getQuarter = (date?: string) => {
   return Math.ceil(dayjs(date).month() / 3);
 };
 
-export const checkIsDateInCurrentQuarter = (date, quarter, year) => {
+export const checkIsDateInCurrentQuarter = (date: string | undefined, quarter: number, year: number) => {
   const currentQuarter = quarter ?? getQuarter();
   const quarterDate = getQuarter(date);
   const isSameYear = (year ? year : dayjs().year()) === dayjs(date).year();
