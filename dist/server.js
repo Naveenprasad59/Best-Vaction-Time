@@ -1,9 +1,11 @@
+import fetch from "node-fetch";
 import dayjs from "dayjs";
 import 'dotenv/config';
 import { checkIsDateInCurrentQuarter, getAllWeekendsInaQuarter, } from "./dateUtils.js";
+import { askQuestions } from "./utils.js";
 const fetchHolidays = async () => {
     try {
-        const responseData = await fetch("https://klenty.keka.com/k/dashboard/api/dashboard/holidays", {
+        const response = await fetch("https://klenty.keka.com/k/dashboard/api/dashboard/holidays", {
             headers: {
                 accept: "application/json, text/plain, */*",
                 "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
@@ -26,8 +28,8 @@ const fetchHolidays = async () => {
             body: null,
             method: "GET",
         });
-        const holidays = await responseData.json();
-        return holidays.data;
+        const holidaysResponse = await response.json();
+        return holidaysResponse.data;
     }
     catch (err) {
         console.log(err);
@@ -42,6 +44,7 @@ const groupHolidaysSequentially = (holidays) => {
         const holiday = holidays[holidayIndex];
         let numberOfDaysContiuos = 1;
         let nextDay = dayjs(holiday).add(1, "day").format("YYYY-MM-DD");
+        // TODO: can optimize this further since holidays is a sorted array can check nextDay at nextIndex
         while (holidaysSet.has(nextDay)) {
             numberOfDaysContiuos++;
             nextDay = dayjs(nextDay).add(1, "day").format("YYYY-MM-DD");
@@ -66,22 +69,28 @@ const bridgeHolidaysWithLeaves = (holidays, numOfDaysToCheck) => {
         const holiday = holidays[holidayIndex];
         const updatedholidayObj = {
             date: holiday.date,
+            endDate: dayjs(holiday.date).add(holiday.numberOfDaysContiuos - 1, 'day').format('YYYY-MM-DD'),
             numberOfDaysContiuos: holiday.numberOfDaysContiuos,
         };
-        let leaveTaken = 1;
-        while (leaveTaken <= numOfDaysToCheck) {
-            const dateWithLeavesAppliedHere = dayjs(holiday.date).add(holiday.numberOfDaysContiuos + leaveTaken);
-            const foundIndex = holidays.findIndex((h) => dayjs(h.date).isSame(dateWithLeavesAppliedHere));
-            if (foundIndex > -1) {
-                const tobeBridgedDate = holidays[foundIndex];
+        let leaveRemaining = numOfDaysToCheck;
+        while (true) {
+            const nextDay = dayjs(updatedholidayObj.endDate).add(1, 'day');
+            const isNextDayHoliday = holidays.findIndex((h) => dayjs(h.date).isSame(nextDay));
+            if (isNextDayHoliday > -1) {
+                const tobeBridgedDate = holidays[isNextDayHoliday];
                 updatedholidayObj.numberOfDaysContiuos +=
                     tobeBridgedDate.numberOfDaysContiuos;
+                updatedholidayObj.endDate = nextDay.add(tobeBridgedDate.numberOfDaysContiuos - 1, 'day').format('YYYY-MM-DD');
             }
             else {
-                leaveTaken += 1;
+                if (leaveRemaining === 0)
+                    break;
+                leaveRemaining -= 1;
+                updatedholidayObj.endDate = nextDay.format('YYYY-MM-DD');
+                updatedholidayObj.numberOfDaysContiuos += 1;
             }
         }
-        const finalTotalLeave = updatedholidayObj.numberOfDaysContiuos + numOfDaysToCheck;
+        const finalTotalLeave = updatedholidayObj.numberOfDaysContiuos;
         if (maxLeaveData.vacationCountWithLeave < finalTotalLeave) {
             maxLeaveData = {
                 date: updatedholidayObj.date,
@@ -99,17 +108,14 @@ const bridgeHolidaysWithLeaves = (holidays, numOfDaysToCheck) => {
 const main = async () => {
     try {
         console.time('Execution Time');
-        const numOfDaysToCheck = 3;
-        const yearToCheck = 2025;
-        const quarterToCheck = 1;
+        const [yearToCheck, quarterToCheck, numOfDaysToCheck] = await askQuestions();
         let holidays = await fetchHolidays();
-        holidays = holidays
-            .filter((holiday) => checkIsDateInCurrentQuarter(holiday.date, quarterToCheck, yearToCheck))
+        const holidayDates = holidays
+            .filter((holiday) => checkIsDateInCurrentQuarter(holiday.date, Number(quarterToCheck), yearToCheck))
             .map((data) => data.date);
-        const weekends = getAllWeekendsInaQuarter(quarterToCheck, yearToCheck);
-        const holidayDates = [...holidays];
-        holidays = groupHolidaysSequentially(holidays.concat(weekends).sort((a, b) => (dayjs(a).isBefore(b) ? -1 : 1)));
-        const { bridgedHolidays, maxLeaveData } = bridgeHolidaysWithLeaves(holidays, numOfDaysToCheck, holidayDates);
+        const weekends = getAllWeekendsInaQuarter(Number(quarterToCheck), yearToCheck);
+        const groupedLeaves = groupHolidaysSequentially(holidayDates.concat(weekends).sort((a, b) => (dayjs(a).isBefore(b) ? -1 : 1)));
+        const { bridgedHolidays, maxLeaveData } = bridgeHolidaysWithLeaves(groupedLeaves, numOfDaysToCheck);
         console.timeEnd('Execution Time');
         console.log(bridgedHolidays);
         console.log(maxLeaveData);

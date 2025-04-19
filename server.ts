@@ -6,6 +6,7 @@ import {
   checkIsDateInCurrentQuarter,
   getAllWeekendsInaQuarter,
 } from "./dateUtils.js";
+import { askQuestions } from "./utils.js";
 
 interface HolidayAPI {
   name: string;
@@ -72,6 +73,7 @@ const groupHolidaysSequentially = (holidays: string[]) => {
       date: holiday,
       numberOfDaysContiuos,
     };
+
     updatedHolidays.push(obj);
     holidayIndex += numberOfDaysContiuos;
   }
@@ -140,14 +142,12 @@ const bridgeHolidaysWithLeaves = (holidays: {date: string; numberOfDaysContiuos:
 const main = async () => {
   try {
     console.time('Execution Time');
-    const numOfDaysToCheck = 3;
-    const yearToCheck = 2025;
-    const quarterToCheck = 1;
+    const [yearToCheck, quarterToCheck, numOfDaysToCheck] =  await askQuestions();
     let holidays = await fetchHolidays();
     const holidayDates = holidays
-      .filter((holiday) => checkIsDateInCurrentQuarter(holiday.date, quarterToCheck, yearToCheck))
+      .filter((holiday) => checkIsDateInCurrentQuarter(holiday.date, Number(quarterToCheck), yearToCheck))
       .map((data) => data.date);
-    const weekends = getAllWeekendsInaQuarter(quarterToCheck, yearToCheck);
+    const weekends = getAllWeekendsInaQuarter(Number(quarterToCheck), yearToCheck);
     const groupedLeaves = groupHolidaysSequentially(
       holidayDates.concat(weekends).sort((a, b) => (dayjs(a).isBefore(b) ? -1 : 1))
     );

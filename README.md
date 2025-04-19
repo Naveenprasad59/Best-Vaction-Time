@@ -10,6 +10,7 @@ This project helps you determine the best time to take a vacation by analyzing h
 ## Prerequisites
 - Node.js (v14 or higher recommended)
 - npm
+- TypeScript
 
 ## Installation
 
